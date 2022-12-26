@@ -1,13 +1,18 @@
 # coding:utf-8
+from bs4 import BeautifulSoup, MarkupResemblesLocatorWarning
 import re
 import sys
 import copy
 import json
 import yaml
 import penman
+import warnings
 from tqdm import tqdm
 from pathlib import Path
 from IO import read_raw_amr_data
+
+warnings.filterwarnings(
+    "ignore", category=MarkupResemblesLocatorWarning, module='bs4')
 
 
 def _tokenize_encoded_graph(encoded):
@@ -91,6 +96,10 @@ def dfs_linearize(graph):
     return linearized_nodes
 
 
+def remove_tags(text):
+    return BeautifulSoup(text, "lxml").text
+
+
 if __name__ == "__main__":
     from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
     parser = ArgumentParser(
@@ -122,7 +131,7 @@ if __name__ == "__main__":
 
     for g in tqdm(graphs):
         lin_tokens = dfs_linearize(g)
-        sentences.append(g.metadata["snt"])
+        sentences.append(remove_tags(g.metadata["snt"]))
         #line_amr.append(" ".join(lin_tokens[1:-1]))
         line_amr.append(" ".join(lin_tokens))
 
@@ -138,4 +147,3 @@ if __name__ == "__main__":
 
     with open(args.output_prefix + ".jsonl", "w", encoding="utf-8") as fout:
         fout.write("\n".join(res_out) + "\n")
-
